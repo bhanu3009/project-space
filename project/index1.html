@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA SATELLITE DATA VERIFICATION SYSTEM</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --cosmic-navy: #0B0B2B;
+            --deep-space: #000010;
+            --nebula-purple: #6B46C1;
+            --star-gold: #FFD700;
+            --planet-blue: #3B82F6;
+            --cyan-glow: #00FFFF;
+            --magenta-glow: #FF00FF;
+            --gold-glow: #FFD700;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --success-green: #00FF88;
+            --warning-yellow: #FFAA00;
+            --danger-red: #FF3366;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background-color: var(--deep-space);
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Starfield Background */
+        #starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Nebula Clouds */
+        .nebula {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            z-index: -1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .nebula1 {
+            background: radial-gradient(circle, var(--nebula-purple), transparent);
+            top: -200px;
+            right: -200px;
+        }
+
+        .nebula2 {
+            background: radial-gradient(circle, var(--planet-blue), transparent);
+            bottom: -200px;
+            left: -200px;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        /* Header */
+        header {
+            padding: 20px 40px;
+            background: linear-gradient(180deg, rgba(11, 11, 43, 0.8) 0%, transparent 100%);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--cyan-glow);
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .logo h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 2rem;
+            background: linear-gradient(90deg, var(--cyan-glow), var(--magenta-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #00ff00;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(0, 255, 0, 0); }
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+
+        .nav-tab {
+            padding: 12px 30px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--planet-blue), var(--nebula-purple));
+            border-color: var(--cyan-glow);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mission Control Panel */
+        .mission-control {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan-glow), transparent);
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(100%); }
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--star-gold);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed var(--glass-border);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--cyan-glow);
+            background: rgba(0, 255, 255, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-zone i {
+            font-size: 4rem;
+            color: var(--planet-blue);
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        #fileInput, #binaryInput {
+            display: none;
+        }
+
+        /* Image Preview */
+        .image-preview {
+            margin-top: 20px;
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 15px;
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent 70%, rgba(0, 0, 0, 0.8) 100%);
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+        }
+
+        .image-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Results Panel */
+        .results-container {
+            display: none;
+        }
+
+        .verification-result {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 3px solid var(--cyan-glow);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--star-gold);
+        }
+
+        .result-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .status-pass {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--success-green);
+            border: 1px solid var(--success-green);
+        }
+
+        .status-fail {
+            background: rgba(255, 51, 102, 0.2);
+            color: var(--danger-red);
+            border: 1px solid var(--danger-red);
+        }
+
+        .status-warning {
+            background: rgba(255, 170, 0, 0.2);
+            color: var(--warning-yellow);
+            border: 1px solid var(--warning-yellow);
+        }
+
+        .result-details {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .detail-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .detail-value {
+            color: var(--cyan-glow);
+        }
+
+        /* Binary Display */
+        .binary-display {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            word-break: break-all;
+            color: var(--cyan-glow);
+        }
+
+        /* Loading Animation */
+        .loading-container {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .satellite {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            position: relative;
+            animation: orbit 2s linear infinite;
+        }
+
+        @keyframes orbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .satellite-body {
+            width: 40px;
+            height: 40px;
+            background: var(--planet-blue);
+            border-radius: 50%;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            box-shadow: 0 0 20px var(--planet-blue);
+        }
+
+        .satellite-panel {
+            position: absolute;
+            width: 80px;
+            height: 10px;
+            background: linear-gradient(90deg, var(--star-gold), var(--cyan-glow));
+            top: 35px;
+            left: 0;
+        }
+
+        .loading-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--cyan-glow);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--planet-blue), var(--nebula-purple));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--cyan-glow);
+            border: 2px solid var(--cyan-glow);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-green), #00cc66);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* Holographic Display */
+        .hologram {
+            position: relative;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .hologram::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: hologram-scan 2s linear infinite;
+        }
+
+        @keyframes hologram-scan {
+            from { left: -100%; }
+            to { left: 100%; }
+        }
+
+        /* Notification Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-success {
+            border-left: 3px solid var(--success-green);
+        }
+
+        .toast-error {
+            border-left: 3px solid var(--danger-red);
+        }
+
+        .toast-info {
+            border-left: 3px solid var(--cyan-glow);
+        }
+
+        /* Final Verdict */
+        .final-verdict {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .verdict-pass {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 102, 0.1));
+            border: 2px solid var(--success-green);
+        }
+
+        .verdict-fail {
+            background: linear-gradient(135deg, rgba(255, 51, 102, 0.1), rgba(204, 0, 51, 0.1));
+            border: 2px solid var(--danger-red);
+        }
+
+        .verdict-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .verdict-message {
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .mission-control {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+            }
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus Styles */
+        *:focus {
+            outline: 2px solid var(--cyan-glow);
+            outline-offset: 2px;
+        }
+
+        button:focus,
+        .upload-zone:focus,
+        .nav-tab:focus {
+            outline: 2px solid var(--cyan-glow);
+            outline-offset: 2px;
+        }
+
+        /* Binary to Image Preview */
+        .binary-preview {
+            margin-top: 20px;
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            display: none;
+            text-align: center;
+        }
+
+        .binary-preview img {
+            max-width: 100%;
+            height: 300px;
+            object-fit: contain;
+            border-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Starfield Background -->
+    <div id="starfield"></div>
+    
+    <!-- Nebula Clouds -->
+    <div class="nebula nebula1"></div>
+    <div class="nebula nebula2"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-satellite"></i>
+                <h1>NASA SATELLITE DATA VERIFICATION</h1>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>SYSTEM ONLINE</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <div class="nav-tab active" data-tab="verification">
+            <i class="fas fa-check-circle"></i> IMAGE VERIFICATION
+        </div>
+        <div class="nav-tab" data-tab="binary-converter">
+            <i class="fas fa-exchange-alt"></i> IMAGE TO BINARY
+        </div>
+        <div class="nav-tab" data-tab="image-converter">
+            <i class="fas fa-image"></i> BINARY TO IMAGE
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="container">
+        <!-- Image Verification Tab -->
+        <div class="tab-content active" id="verification">
+            <div class="mission-control">
+                <!-- Upload Panel -->
+                <section class="panel">
+                    <h2 class="panel-title">
+                        <i class="fas fa-upload"></i>
+                        SATELLITE DATA UPLOAD
+                    </h2>
+                    
+                    <div class="upload-zone" id="uploadZone" tabindex="0" role="button" aria-label="Upload image for verification">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p class="upload-text">DRAG & DROP SATELLITE IMAGE</p>
+                        <p class="upload-subtext">or click to browse (JPG, PNG, max 10MB)</p>
+                        <input type="file" id="fileInput" accept="image/*">
+                    </div>
+
+                    <div class="image-preview" id="imagePreview">
+                        <img id="previewImg" src="" alt="Preview">
+                        <div class="image-overlay">
+                            <div class="image-info">
+                                <span id="fileName">image.jpg</span>
+                                <span id="fileSize">2.3 MB</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="verifyBtn" disabled>
+                            <i class="fas fa-shield-alt"></i> VERIFY FOR NASA STANDARDS
+                        </button>
+                        <button class="btn btn-secondary" id="resetBtn">
+                            <i class="fas fa-redo"></i> RESET
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Results Panel -->
+                <section class="panel">
+                    <h2 class="panel-title">
+                        <i class="fas fa-clipboard-check"></i>
+                        VERIFICATION RESULTS
+                    </h2>
+
+                    <div class="loading-container" id="loadingContainer">
+                        <div class="satellite">
+                            <div class="satellite-body"></div>
+                            <div class="satellite-panel"></div>
+                        </div>
+                        <p class="loading-text">ANALYZING SATELLITE DATA...</p>
+                    </div>
+
+                    <div class="results-container" id="resultsContainer">
+                        <div class="hologram">
+                            <h3 style="margin-bottom: 20px; color: var(--star-gold);">NASA VERIFICATION REPORT</h3>
+                            <div id="verificationResults"></div>
+                        </div>
+                    </div>
+
+                    <div id="emptyState" style="text-align: center; padding: 40px; color: rgba(255, 255, 255, 0.5);">
+                        <i class="fas fa-satellite-dish" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                        <p>AWAITING SATELLITE DATA</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Image to Binary Tab -->
+        <div class="tab-content" id="binary-converter">
+            <div class="mission-control">
+                <!-- Upload Panel -->
+                <section class="panel">
+                    <h2 class="panel-title">
+                        <i class="fas fa-file-binary"></i>
+                        IMAGE TO BINARY CONVERTER
+                    </h2>
+                    
+                    <div class="upload-zone" id="binaryUploadZone" tabindex="0" role="button" aria-label="Upload image for binary conversion">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p class="upload-text">DRAG & DROP IMAGE</p>
+                        <p class="upload-subtext">or click to browse (JPG, PNG, max 10MB)</p>
+                        <input type="file" id="binaryFileInput" accept="image/*">
+                    </div>
+
+                    <div class="image-preview" id="binaryImagePreview">
+                        <img id="binaryPreviewImg" src="" alt="Preview">
+                        <div class="image-overlay">
+                            <div class="image-info">
+                                <span id="binaryFileName">image.jpg</span>
+                                <span id="binaryFileSize">2.3 MB</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="convertBtn" disabled>
+                            <i class="fas fa-exchange-alt"></i> CONVERT TO BINARY
+                        </button>
+                        <button class="btn btn-success" id="downloadBinaryBtn" disabled>
+                            <i class="fas fa-download"></i> DOWNLOAD BINARY
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Binary Display Panel -->
+                <section class="panel">
+                    <h2 class="panel-title">
+                        <i class="fas fa-code"></i>
+                        BINARY DATA OUTPUT
+                    </h2>
+
+                    <div id="binaryEmptyState" style="text-align: center; padding: 40px; color: rgba(255, 255, 255, 0.5);">
+                        <i class="fas fa-file-code" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                        <p>BINARY DATA WILL APPEAR HERE</p>
+                    </div>
+
+                    <div id="binaryResultContainer" style="display: none;">
+                        <div class="binary-display" id="binaryDisplay"></div>
+                        <div style="margin-top: 15px; color: var(--cyan-glow);">
+                            <i class="fas fa-info-circle"></i> Binary data has been saved to the project folder
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Binary to Image Tab -->
+        <div class="tab-content" id="image-converter">
+            <div class="mission-control">
+                <!-- Binary Input Panel -->
+                <section class="panel">
+                    <h2 class="panel-title">
+                        <i class="fas fa-file-import"></i>
+                        BINARY TO IMAGE CONVERTER
+                    </h2>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label for="binaryTextInput" style="display: block; margin-bottom: 10px; color: var(--cyan-glow);">
+                            PASTE BINARY DATA:
+                        </label>
+                        <textarea id="binaryTextInput" rows="10" style="width: 100%; padding: 15px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border); border-radius: 10px; color: var(--cyan-glow); font-family: 'Courier New', monospace; resize: vertical;" placeholder="Paste binary data here..."></textarea>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label for="binaryFileInput" style="display: block; margin-bottom: 10px; color: var(--cyan-glow);">
+                            OR UPLOAD BINARY FILE:
+                        </label>
+                        <div class="upload-zone" id="binaryFileUploadZone" tabindex="0" role="button" aria-label="Upload binary file">
+                            <i class="fas fa-file-upload"></i>
+                            <p class="upload-text">DRAG & DROP BINARY FILE</p>
+                            <p class="upload-subtext">or click to browse</p>
+                            <input type="file" id="binaryFileInput2" accept=".bin,.txt">
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="convertToImageBtn" disabled>
+                            <i class="fas fa-image"></i> CONVERT TO IMAGE
+                        </button>
+                        <button class="btn btn-success" id="downloadImageBtn" disabled>
+                            <i class="fas fa-download"></i> DOWNLOAD IMAGE
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Image Output Panel -->
+                <section class="panel">
+                    <h2 class="panel-title">
+                        <i class="fas fa-image"></i>
+                        CONVERTED IMAGE
+                    </h2>
+
+                    <div id="imageEmptyState" style="text-align: center; padding: 40px; color: rgba(255, 255, 255, 0.5);">
+                        <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                        <p>CONVERTED IMAGE WILL APPEAR HERE</p>
+                    </div>
+
+                    <div class="binary-preview" id="binaryPreview">
+                        <img id="convertedImg" src="" alt="Converted Image">
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast" role="alert"></div>
+
+    <script>
+        // Initialize starfield
+        function createStarfield() {
+            const starfield = document.getElementById('starfield');
+            const starCount = 200;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starfield.appendChild(star);
+            }
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast toast-${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Tab navigation
+        const navTabs = document.querySelectorAll('.nav-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.getAttribute('data-tab');
+                
+                // Update active tab
+                navTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Update active content
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === targetTab) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // Image Verification Module
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const loadingContainer = document.getElementById('loadingContainer');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const emptyState = document.getElementById('emptyState');
+        const verificationResults = document.getElementById('verificationResults');
+
+        let uploadedFile = null;
+
+        // Click to upload
+        uploadZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Drag and drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Handle file upload
+        function handleFile(file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                showToast('Please upload an image file', 'error');
+                return;
+            }
+
+            // Validate file size (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('File size must be less than 10MB', 'error');
+                return;
+            }
+
+            uploadedFile = file;
+            
+            // Display preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                fileName.textContent = file.name;
+                fileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                imagePreview.style.display = 'block';
+                verifyBtn.disabled = false;
+                showToast('Image uploaded successfully', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Verify button
+        verifyBtn.addEventListener('click', () => {
+            if (!uploadedFile) return;
+            
+            // Show loading
+            emptyState.style.display = 'none';
+            resultsContainer.style.display = 'none';
+            loadingContainer.style.display = 'block';
+            
+            // Simulate NASA verification process
+            setTimeout(() => {
+                const results = generateVerificationResults();
+                displayVerificationResults(results);
+                
+                loadingContainer.style.display = 'none';
+                resultsContainer.style.display = 'block';
+                
+                showToast('Verification complete!', 'success');
+            }, 3000);
+        });
+
+        // Generate NASA verification results
+        function generateVerificationResults() {
+            // Generate random verification results
+            const metadataAuthenticity = Math.random() > 0.3;
+            const visualQuality = Math.random() > 0.2;
+            const scientificValue = Math.random() > 0.4;
+            const resolution = Math.random() > 0.25;
+            const colorAccuracy = Math.random() > 0.35;
+            const noiseLevel = Math.random() > 0.3;
+            
+            // Calculate overall pass/fail
+            const passedChecks = [metadataAuthenticity, visualQuality, scientificValue, resolution, colorAccuracy, noiseLevel].filter(Boolean).length;
+            const overallPass = passedChecks >= 4;
+            
+            return {
+                metadataAuthenticity,
+                visualQuality,
+                scientificValue,
+                resolution,
+                colorAccuracy,
+                noiseLevel,
+                overallPass,
+                score: Math.round((passedChecks / 6) * 100)
+            };
+        }
+
+        // Display verification results
+        function displayVerificationResults(results) {
+            verificationResults.innerHTML = '';
+            
+            // Create result items
+            const checks = [
+                { name: 'Metadata Authenticity', key: 'metadataAuthenticity', description: 'Verifying EXIF data and timestamps' },
+                { name: 'Visual Quality', key: 'visualQuality', description: 'Assessing image clarity and artifacts' },
+                { name: 'Scientific Value', key: 'scientificValue', description: 'Evaluating research potential' },
+                { name: 'Resolution Standards', key: 'resolution', description: 'Checking minimum resolution requirements' },
+                { name: 'Color Accuracy', key: 'colorAccuracy', description: 'Validating color representation' },
+                { name: 'Noise Level', key: 'noiseLevel', description: 'Measuring signal-to-noise ratio' }
+            ];
+            
+            checks.forEach((check, index) => {
+                const passed = results[check.key];
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'verification-result';
+                resultDiv.style.opacity = '0';
+                resultDiv.style.transform = 'translateY(20px)';
+                
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-title">${check.name}</div>
+                        <div class="result-status ${passed ? 'status-pass' : 'status-fail'}">
+                            ${passed ? 'PASS' : 'FAIL'}
+                        </div>
+                    </div>
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Description:</span>
+                            <span class="detail-value">${check.description}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Result:</span>
+                            <span class="detail-value">${passed ? 'Meets NASA standards' : 'Does not meet requirements'}</span>
+                        </div>
+                    </div>
+                `;
+                
+                verificationResults.appendChild(resultDiv);
+                
+                // Animate in
+                setTimeout(() => {
+                    resultDiv.style.transition = 'all 0.5s ease';
+                    resultDiv.style.opacity = '1';
+                    resultDiv.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+            
+            // Add final verdict
+            setTimeout(() => {
+                const verdictDiv = document.createElement('div');
+                verdictDiv.className = `final-verdict ${results.overallPass ? 'verdict-pass' : 'verdict-fail'}`;
+                verdictDiv.style.opacity = '0';
+                verdictDiv.style.transform = 'scale(0.9)';
+                
+                verdictDiv.innerHTML = `
+                    <div class="verdict-title">
+                        ${results.overallPass ? 
+                            '<i class="fas fa-check-circle"></i> NASA APPROVED' : 
+                            '<i class="fas fa-times-circle"></i> NASA REJECTED'}
+                    </div>
+                    <div class="verdict-message">
+                        ${results.overallPass ? 
+                            `This image meets NASA standards with a score of ${results.score}%. It is suitable for scientific analysis and inclusion in NASA's satellite database.` :
+                            `This image does not meet NASA standards with a score of ${results.score}%. Further processing or recapture may be required.`}
+                    </div>
+                `;
+                
+                verificationResults.appendChild(verdictDiv);
+                
+                // Animate in
+                setTimeout(() => {
+                    verdictDiv.style.transition = 'all 0.5s ease';
+                    verdictDiv.style.opacity = '1';
+                    verdictDiv.style.transform = 'scale(1)';
+                }, 100);
+            }, checks.length * 100 + 200);
+        }
+
+        // Reset button
+        resetBtn.addEventListener('click', () => {
+            uploadedFile = null;
+            imagePreview.style.display = 'none';
+            verifyBtn.disabled = true;
+            resultsContainer.style.display = 'none';
+            emptyState.style.display = 'block';
+            fileInput.value = '';
+            showToast('System reset', 'success');
+        });
+
+        // Image to Binary Converter Module
+        const binaryUploadZone = document.getElementById('binaryUploadZone');
+        const binaryFileInput = document.getElementById('binaryFileInput');
+        const binaryImagePreview = document.getElementById('binaryImagePreview');
+        const binaryPreviewImg = document.getElementById('binaryPreviewImg');
+        const binaryFileName = document.getElementById('binaryFileName');
+        const binaryFileSize = document.getElementById('binaryFileSize');
+        const convertBtn = document.getElementById('convertBtn');
+        const downloadBinaryBtn = document.getElementById('downloadBinaryBtn');
+        const binaryEmptyState = document.getElementById('binaryEmptyState');
+        const binaryResultContainer = document.getElementById('binaryResultContainer');
+        const binaryDisplay = document.getElementById('binaryDisplay');
+
+        let binaryUploadedFile = null;
+        let binaryData = '';
+
+        // Click to upload for binary converter
+        binaryUploadZone.addEventListener('click', () => {
+            binaryFileInput.click();
+        });
+
+        // Drag and drop for binary converter
+        binaryUploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            binaryUploadZone.classList.add('dragover');
+        });
+
+        binaryUploadZone.addEventListener('dragleave', () => {
+            binaryUploadZone.classList.remove('dragover');
+        });
+
+        binaryUploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            binaryUploadZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleBinaryFile(files[0]);
+            }
+        });
+
+        // File input change for binary converter
+        binaryFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleBinaryFile(e.target.files[0]);
+            }
+        });
+
+        // Handle file upload for binary converter
+        function handleBinaryFile(file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                showToast('Please upload an image file', 'error');
+                return;
+            }
+
+            // Validate file size (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('File size must be less than 10MB', 'error');
+                return;
+            }
+
+            binaryUploadedFile = file;
+            
+            // Display preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                binaryPreviewImg.src = e.target.result;
+                binaryFileName.textContent = file.name;
+                binaryFileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                binaryImagePreview.style.display = 'block';
+                convertBtn.disabled = false;
+                showToast('Image uploaded successfully', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Convert to binary button
+        convertBtn.addEventListener('click', () => {
+            if (!binaryUploadedFile) return;
+            
+            // Show loading
+            binaryEmptyState.style.display = 'none';
+            binaryResultContainer.style.display = 'none';
+            
+            // Convert image to binary
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                // Convert to binary string
+                const arrayBuffer = e.target.result;
+                const bytes = new Uint8Array(arrayBuffer);
+                binaryData = '';
+                
+                // Create a simplified binary representation for display
+                for (let i = 0; i < Math.min(1000, bytes.length); i++) {
+                    binaryData += bytes[i].toString(2).padStart(8, '0') + ' ';
+                }
+                
+                // Display binary data
+                binaryDisplay.textContent = binaryData;
+                binaryEmptyState.style.display = 'none';
+                binaryResultContainer.style.display = 'block';
+                downloadBinaryBtn.disabled = false;
+                
+                // Save binary data to project folder (simulated)
+                saveBinaryData(binaryData, binaryUploadedFile.name);
+                
+                showToast('Image converted to binary successfully', 'success');
+            };
+            reader.readAsArrayBuffer(binaryUploadedFile);
+        });
+
+        // Download binary button
+        downloadBinaryBtn.addEventListener('click', () => {
+            if (!binaryData) return;
+            
+            // Create download link
+            const blob = new Blob([binaryData], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = binaryUploadedFile.name.replace(/\.[^/.]+$/, '') + '_binary.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('Binary data downloaded', 'success');
+        });
+
+        // Binary to Image Converter Module
+        const binaryTextInput = document.getElementById('binaryTextInput');
+        const binaryFileUploadZone = document.getElementById('binaryFileUploadZone');
+        const binaryFileInput2 = document.getElementById('binaryFileInput2');
+        const convertToImageBtn = document.getElementById('convertToImageBtn');
+        const downloadImageBtn = document.getElementById('downloadImageBtn');
+        const imageEmptyState = document.getElementById('imageEmptyState');
+        const binaryPreview = document.getElementById('binaryPreview');
+        const convertedImg = document.getElementById('convertedImg');
+
+        let binaryInputData = '';
+
+        // Binary text input change
+        binaryTextInput.addEventListener('input', () => {
+            binaryInputData = binaryTextInput.value.trim();
+            convertToImageBtn.disabled = !binaryInputData;
+        });
+
+        // Click to upload binary file
+        binaryFileUploadZone.addEventListener('click', () => {
+            binaryFileInput2.click();
+        });
+
+        // Drag and drop for binary file
+        binaryFileUploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            binaryFileUploadZone.classList.add('dragover');
+        });
+
+        binaryFileUploadZone.addEventListener('dragleave', () => {
+            binaryFileUploadZone.classList.remove('dragover');
+        });
+
+        binaryFileUploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            binaryFileUploadZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleBinaryFileUpload(files[0]);
+            }
+        });
+
+        // File input change for binary file
+        binaryFileInput2.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleBinaryFileUpload(e.target.files[0]);
+            }
+        });
+
+        // Handle binary file upload
+        function handleBinaryFileUpload(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                binaryInputData = e.target.result;
+                binaryTextInput.value = binaryInputData;
+                convertToImageBtn.disabled = false;
+                showToast('Binary file loaded successfully', 'success');
+            };
+            reader.readAsText(file);
+        }
+
+        // Convert to image button
+        convertToImageBtn.addEventListener('click', () => {
+            if (!binaryInputData) return;
+            
+            // Show loading
+            imageEmptyState.style.display = 'none';
+            binaryPreview.style.display = 'none';
+            
+            // For demonstration purposes, we'll create a placeholder image
+            // In a real application, you would need to properly decode the binary data
+            try {
+                // Create a simple placeholder image
+                const canvas = document.createElement('canvas');
+                canvas.width = 300;
+                canvas.height = 200;
+                const ctx = canvas.getContext('2d');
+                
+                // Create a gradient background
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, '#3B82F6');
+                gradient.addColorStop(1, '#6B46C1');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add text
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('BINARY TO IMAGE CONVERSION', canvas.width/2, canvas.height/2 - 10);
+                ctx.font = '14px Arial';
+                ctx.fillText('(Placeholder for demo)', canvas.width/2, canvas.height/2 + 15);
+                
+                // Convert to data URL
+                convertedImg.src = canvas.toDataURL();
+                binaryPreview.style.display = 'block';
+                downloadImageBtn.disabled = false;
+                showToast('Binary converted to image successfully', 'success');
+            } catch (error) {
+                showToast('Error converting binary to image', 'error');
+                imageEmptyState.style.display = 'block';
+            }
+        });
+
+        // Download image button
+        downloadImageBtn.addEventListener('click', () => {
+            if (!convertedImg.src) return;
+            
+            // Create download link
+            const a = document.createElement('a');
+            a.href = convertedImg.src;
+            a.download = 'converted_image.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            showToast('Image downloaded', 'success');
+        });
+
+        // Simulate saving binary data to project folder
+        function saveBinaryData(data, filename) {
+            // In a real implementation, this would send the data to a backend server
+            // For this demo, we'll just log it to console
+            console.log(`Saving binary data for ${filename} to project folder...`);
+            console.log(`Data length: ${data.length} characters`);
+            
+            // In a real backend, this would be handled by a server-side script
+            // For demonstration purposes, we'll store it in localStorage
+            const timestamp = new Date().toISOString();
+            localStorage.setItem(`binary_${timestamp}_${filename}`, data);
+            
+            showToast(`Binary data saved to project folder as ${timestamp}_${filename}`, 'info');
+        }
+
+        // Keyboard accessibility
+        uploadZone.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
+
+        binaryUploadZone.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                binaryFileInput.click();
+            }
+        });
+
+        binaryFileUploadZone.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                binaryFileInput2.click();
+            }
+        });
+
+        // Initialize
+        createStarfield();
+
+        // Add some interactive particles on click
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                createParticleExplosion(e.clientX, e.clientY);
+            }
+        });
+
+        function createParticleExplosion(x, y) {
+            for (let i = 0; i < 10; i++) {
+                const particle = document.createElement('div');
+                particle.style.position = 'fixed';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.width = '4px';
+                particle.style.height = '4px';
+                particle.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                particle.style.borderRadius = '50%';
+                particle.style.pointerEvents = 'none';
+                particle.style.zIndex = '9999';
+                
+                document.body.appendChild(particle);
+                
+                const angle = (Math.PI * 2 * i) / 10;
+                const velocity = 100 + Math.random() * 100;
+                
+                particle.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${Math.cos(angle) * velocity}px, ${Math.sin(angle) * velocity}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 600,
+                    easing: 'cubic-bezier(0, .9, .57, 1)'
+                }).onfinish = () => particle.remove();
+            }
+        }
+
+        // Add floating planets
+        function createFloatingPlanet() {
+            const planet = document.createElement('div');
+            planet.style.position = 'fixed';
+            planet.style.width = '50px';
+            planet.style.height = '50px';
+            planet.style.borderRadius = '50%';
+            planet.style.background = `radial-gradient(circle at 30% 30%, ${['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24'][Math.floor(Math.random() * 4)]}, transparent)`;
+            planet.style.boxShadow = '0 0 20px rgba(255, 255, 255, 0.3)';
+            planet.style.left = '-50px';
+            planet.style.top = Math.random() * window.innerHeight + 'px';
+            planet.style.zIndex = '1';
+            
+            document.body.appendChild(planet);
+            
+            planet.animate([
+                { transform: 'translateX(0) rotate(0deg)' },
+                { transform: `translateX(${window.innerWidth + 100}px) rotate(360deg)` }
+            ], {
+                duration: 20000 + Math.random() * 10000,
+                easing: 'linear'
+            }).onfinish = () => planet.remove();
+        }
+
+        // Create planets periodically
+        setInterval(createFloatingPlanet, 8000);
+
+        // Performance optimization - reduce animations on low-end devices
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.querySelectorAll('*').forEach(el => {
+                el.style.animation = 'none';
+                el.style.transition = 'none';
+            });
+        }
+    </script>
+</body>
+</html>

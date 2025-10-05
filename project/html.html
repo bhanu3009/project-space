@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINI-NASA: Architects of the Solar System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.min.js"></script>
+    <style>
+        /* ===== CSS RESET & BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --space-black: #050a14;
+            --space-dark: #0a1428;
+            --space-blue: #1a2a4a;
+            --nasa-orange: #fc3d21;
+            --cyber-teal: #00f5ff;
+            --cyber-green: #39ff14;
+            --star-white: #f0f8ff;
+            --neon-purple: #bc13fe;
+            --warning-yellow: #ffd700;
+            --glass-bg: rgba(5, 10, 20, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --transition-slow: 0.5s ease;
+            --transition-medium: 0.3s ease;
+            --transition-fast: 0.15s ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--space-black);
+            color: var(--star-white);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        /* ===== 3D BACKGROUND CANVAS ===== */
+        #space-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        #app-container {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(5, 10, 20, 0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nasa-logo {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, var(--nasa-orange) 0%, transparent 70%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: pulse 4s infinite alternate;
+        }
+
+        .nasa-logo::before {
+            content: "NASA";
+            color: var(--space-black);
+            font-weight: bold;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, var(--cyber-teal), var(--nasa-orange));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* ===== CONTROL PANEL BUTTON ===== */
+        #control-panel-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 200;
+            transition: var(--transition-medium);
+        }
+
+        #control-panel-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px var(--cyber-teal);
+        }
+
+        #control-panel-toggle span {
+            display: block;
+            width: 30px;
+            height: 3px;
+            background: var(--cyber-teal);
+            margin: 3px 0;
+            transition: var(--transition-medium);
+        }
+
+        #control-panel-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        #control-panel-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        #control-panel-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+
+        /* ===== SIDEBAR ===== */
+        #control-sidebar {
+            position: fixed;
+            top: 0;
+            left: -400px;
+            width: 380px;
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border-right: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            z-index: 150;
+            transition: var(--transition-slow);
+            overflow-y: auto;
+            padding: 2rem 1.5rem;
+        }
+
+        #control-sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .sidebar-title {
+            font-size: 1.5rem;
+            color: var(--cyber-teal);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(26, 42, 74, 0.3);
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--nasa-orange), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--space-black);
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: bold;
+            margin-bottom: 0.2rem;
+        }
+
+        .user-status {
+            font-size: 0.8rem;
+            color: var(--cyber-green);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--cyber-green);
+            animation: blink 2s infinite;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-title {
+            font-size: 1.2rem;
+            color: var(--cyber-teal);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.8rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            color: var(--star-white);
+            text-decoration: none;
+            transition: var(--transition-medium);
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover {
+            background: rgba(26, 42, 74, 0.5);
+            border-color: var(--cyber-teal);
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: rgba(26, 42, 74, 0.7);
+            border-color: var(--nasa-orange);
+        }
+
+        .nav-icon {
+            font-size: 1.5rem;
+        }
+
+        .settings-section, .about-section {
+            margin-bottom: 2rem;
+        }
+
+        .settings-option, .about-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition-medium);
+        }
+
+        .settings-option:hover, .about-item:hover {
+            background: rgba(26, 42, 74, 0.3);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        main {
+            flex: 1;
+            padding: 8rem 3rem 3rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 3rem 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 245, 255, 0.1) 0%, transparent 70%);
+            z-index: -1;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, var(--cyber-teal), var(--nasa-orange));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 30px rgba(0, 245, 255, 0.5);
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: var(--cyber-green);
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .mission-statement {
+            font-size: 1.2rem;
+            color: rgba(240, 248, 255, 0.8);
+            max-width: 800px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.6;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, var(--nasa-orange), var(--neon-purple));
+            color: var(--space-black);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: var(--transition-medium);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(252, 61, 33, 0.5);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 30px rgba(252, 61, 33, 0.7);
+        }
+
+        /* ===== MISSION INTEL SECTION ===== */
+        .mission-intel-section {
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            color: var(--cyber-teal);
+            margin-bottom: 2rem;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+        }
+
+        .mission-intel-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 2rem;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .mission-intel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .mission-intel-title {
+            font-size: 1.5rem;
+            color: var(--cyber-teal);
+        }
+
+        .last-updated {
+            font-size: 0.9rem;
+            color: rgba(240, 248, 255, 0.6);
+        }
+
+        .mission-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .mission-card {
+            background: rgba(26, 42, 74, 0.3);
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            transition: var(--transition-medium);
+        }
+
+        .mission-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .mission-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .mission-content {
+            padding: 1.5rem;
+        }
+
+        .mission-headline {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: var(--star-white);
+        }
+
+        .mission-description {
+            font-size: 0.9rem;
+            color: rgba(240, 248, 255, 0.7);
+            margin-bottom: 1.2rem;
+            line-height: 1.5;
+        }
+
+        .mission-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            font-size: 0.8rem;
+            color: rgba(240, 248, 255, 0.6);
+        }
+
+        .mission-date {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mission-engagement {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .engagement-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .engagement-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: none;
+            border: none;
+            color: rgba(240, 248, 255, 0.7);
+            cursor: pointer;
+            transition: var(--transition-medium);
+            padding: 0.5rem;
+            border-radius: 5px;
+        }
+
+        .engagement-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--cyber-teal);
+        }
+
+        .engagement-count {
+            font-size: 0.8rem;
+            color: rgba(240, 248, 255, 0.6);
+        }
+
+        /* ===== FEATURES SECTION ===== */
+        .features-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 2rem;
+            transition: var(--transition-medium);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .feature-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--cyber-teal), var(--nasa-orange));
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--cyber-teal);
+        }
+
+        .feature-description {
+            color: rgba(240, 248, 255, 0.8);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .feature-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--cyber-green);
+            text-decoration: none;
+            font-weight: bold;
+            transition: var(--transition-medium);
+        }
+
+        .feature-link:hover {
+            gap: 1rem;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            padding: 3rem;
+            background: rgba(5, 10, 20, 0.9);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .footer-title {
+            font-size: 1.2rem;
+            color: var(--cyber-teal);
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .footer-link {
+            color: rgba(240, 248, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition-medium);
+        }
+
+        .footer-link:hover {
+            color: var(--cyber-teal);
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: rgba(240, 248, 255, 0.7);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--star-white);
+            text-decoration: none;
+            transition: var(--transition-medium);
+        }
+
+        .social-link:hover {
+            background: var(--cyber-teal);
+            transform: translateY(-3px);
+        }
+
+        .footer-bottom {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+            color: rgba(240, 248, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(252, 61, 33, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(252, 61, 33, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(252, 61, 33, 0);
+            }
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 5px var(--cyber-teal);
+            }
+            50% {
+                text-shadow: 0 0 20px var(--cyber-teal), 0 0 30px var(--cyber-teal);
+            }
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 1024px) {
+            main {
+                padding: 7rem 2rem 2rem;
+            }
+            
+            .hero-title {
+                font-size: 3rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem 1.5rem;
+            }
+            
+            main {
+                padding: 6rem 1.5rem 1.5rem;
+            }
+            
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            
+            .features-section, .mission-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            #control-sidebar {
+                width: 300px;
+            }
+            
+            .mission-intel-container {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 1rem;
+            }
+            
+            .logo-text {
+                font-size: 1.2rem;
+            }
+            
+            main {
+                padding: 5rem 1rem 1rem;
+            }
+            
+            .hero-title {
+                font-size: 1.8rem;
+            }
+            
+            .hero-section {
+                padding: 2rem 1rem;
+            }
+            
+            #control-sidebar {
+                width: 280px;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <!-- 3D Space Background -->
+        <canvas id="space-canvas"></canvas>
+        
+        <!-- Header -->
+        <header>
+            <div class="logo-container">
+                <div class="nasa-logo"></div>
+                <div class="logo-text">Planetary Design Suite</div>
+            </div>
+        </header>
+        
+        <!-- Control Panel Toggle -->
+        <div id="control-panel-toggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        
+        <!-- Control Sidebar -->
+        <div id="control-sidebar">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">Mission Control</h3>
+            </div>
+            
+            <div class="user-section">
+                <div class="user-avatar">JD</div>
+                <div class="user-info">
+                    <div class="user-name">Dr. Jane Doe</div>
+                    <div class="user-status">
+                        <div class="status-indicator"></div>
+                        Online - Mission Specialist
+                    </div>
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <h4 class="nav-title">Navigation</h4>
+                <ul class="nav-links">
+                    <li class="nav-item">
+                        <a href="html.html" class="nav-link active" data-section="dashboard">
+                            <span class="nav-icon">🚀</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+    <a href="file:///D:/nasaspace/templates/index1.html" class="nav-link" data-section="converter">
+        <span class="nav-icon">🔧</span>
+        <span>Raw Image Converter</span>
+    </a>
+    </li>
+
+                    <li class="nav-item">
+                        <a href="ai_classifier.html" class="nav-link" data-section="classifier">
+                            <span class="nav-icon">🛰️</span>
+                            <span>Satellite Image AI Classifier</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="simulator">
+                            <span class="nav-icon">🛸</span>
+                            <span>Planetary Habitat Simulator</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="designs">
+                            <span class="nav-icon">📂</span>
+                            <span>My Saved Designs</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="settings-section">
+                <h4 class="nav-title">Configuration</h4>
+                <div class="settings-option">
+                    <span class="nav-icon">⚙️</span>
+                    <span>System Settings</span>
+                </div>
+                <div class="settings-option">
+                    <span class="nav-icon">🎮</span>
+                    <span>Control Preferences</span>
+                </div>
+                <div class="settings-option">
+                    <span class="nav-icon">🔔</span>
+                    <span>Notifications</span>
+                </div>
+            </div>
+            
+            <div class="about-section">
+                <h4 class="nav-title">Information</h4>
+                <div class="about-item">
+                    <span class="nav-icon">❓</span>
+                    <span>Help & Documentation</span>
+                </div>
+                <div class="about-item">
+                    <span class="nav-icon">🔍</span>
+                    <span>Mission Data Sources</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <main>
+            <section class="hero-section">
+                <h1 class="hero-title">MINI-NASA: Architects of the Solar System</h1>
+                <p class="mission-statement">Empowering the next generation of space architects. Utilize cutting-edge AI for planetary analysis and simulate sustainable, multi-planetary habitats on Mars and the Moon. Your mission starts here.</p>
+                <button class="cta-button" onclick="window.location.href='ai_classifier.html'">Launch AI Classifier</button>
+            </section>
+            
+            <section class="mission-intel-section">
+                <h2 class="section-title">LATEST MISSION INTEL / ASTRONOMY FEED</h2>
+                <div class="mission-intel-container">
+                    <div class="mission-intel-header">
+                        <h3 class="mission-intel-title">Live Space Updates</h3>
+                        <div class="last-updated">Last updated: <span id="update-time">Just now</span></div>
+                    </div>
+                    <div class="mission-cards" id="mission-cards-container">
+                        <!-- Mission cards will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+            
+            <section class="features-section">
+                <div class="feature-card">
+                    <div class="feature-icon">🛰️</div>
+                    <h3 class="feature-title">Satellite Image AI Classifier</h3>
+                    <p class="feature-description">Upload satellite imagery for automatic terrain classification using advanced machine learning algorithms trained on planetary data. Identify resources, hazards, and optimal landing sites.</p>
+                    <a href="ai_classifier.html" class="feature-link">
+                        <span>Try Classifier</span>
+                        <span>→</span>
+                    </a>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3 class="feature-title">Binary Image Converter</h3>
+                    <p class="feature-description">Convert raw binary data from space missions into viewable images. Process telemetry data from satellites, rovers, and space telescopes with our advanced conversion system.</p>
+                    <a href="binary.html" class="feature-link">
+                        <span>Open Converter</span>
+                        <span>→</span>
+                    </a>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🛸</div>
+                    <h3 class="feature-title">Planetary Habitat Simulator</h3>
+                    <p class="feature-description">Design and test extraterrestrial habitats on Mars and the Moon with realistic environmental conditions and resource management systems. Build sustainable colonies and optimize for survival in harsh environments.</p>
+                    <a href="#" class="feature-link">
+                        <span>Enter Simulator</span>
+                        <span>→</span>
+                    </a>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Footer -->
+        <footer>
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">NASA Contact Information</h3>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <span>📍</span>
+                            <span>NASA Headquarters, Washington, DC 20546-0001</span>
+                        </div>
+                        <div class="contact-item">
+                            <span>📞</span>
+                            <span>(202) 358-0001</span>
+                        </div>
+                        <div class="contact-item">
+                            <span>✉️</span>
+                            <span>public-inquiries@hq.nasa.gov</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3 class="footer-title">Useful Links</h3>
+                    <div class="footer-links">
+                        <a href="html.html" class="footer-link">Dashboard</a>
+                        <a href="binary.html" class="footer-link">Binary Converter</a>
+                        <a href="ai_classifier.html" class="footer-link">AI Classifier</a>
+                        <a href="#" class="footer-link">Mission Data Sources</a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3 class="footer-title">Connect With Us</h3>
+                    <div class="social-links">
+                        <a href="#" class="social-link" aria-label="Twitter">𝕏</a>
+                        <a href="#" class="social-link" aria-label="Instagram">📷</a>
+                        <a href="#" class="social-link" aria-label="YouTube">▶️</a>
+                        <a href="#" class="social-link" aria-label="Facebook">f</a>
+                        <a href="#" class="social-link" aria-label="LinkedIn">in</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>Built by NASA Advanced Concepts Team utilizing Open NASA & ESA Data</p>
+                <p>&copy; 2023 National Aeronautics and Space Administration. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Main Application JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the application
+            initApp();
+            
+            function initApp() {
+                // Initialize 3D space background
+                initSpaceBackground();
+                
+                // Initialize sidebar functionality
+                initSidebar();
+                
+                // Initialize navigation
+                initNavigation();
+                
+                // Initialize interactive elements
+                initInteractiveElements();
+                
+                // Load mission intel data
+                loadMissionIntel();
+                
+                // Start animations
+                startAnimations();
+            }
+            
+            // 3D Space Background with Three.js
+            function initSpaceBackground() {
+                const canvas = document.getElementById('space-canvas');
+                
+                // Scene setup
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+                
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                
+                // Add stars
+                const starGeometry = new THREE.BufferGeometry();
+                const starCount = 10000;
+                
+                const positions = new Float32Array(starCount * 3);
+                const colors = new Float32Array(starCount * 3);
+                
+                for (let i = 0; i < starCount; i++) {
+                    const i3 = i * 3;
+                    
+                    // Random positions in a sphere
+                    positions[i3] = (Math.random() - 0.5) * 2000;
+                    positions[i3 + 1] = (Math.random() - 0.5) * 2000;
+                    positions[i3 + 2] = (Math.random() - 0.5) * 2000;
+                    
+                    // Random colors (mostly white with some blue/red stars)
+                    const color = new THREE.Color();
+                    const rand = Math.random();
+                    if (rand < 0.7) {
+                        color.setRGB(1, 1, 1); // White
+                    } else if (rand < 0.85) {
+                        color.setRGB(0.7, 0.8, 1); // Blue
+                    } else {
+                        color.setRGB(1, 0.8, 0.7); // Red
+                    }
+                    
+                    colors[i3] = color.r;
+                    colors[i3 + 1] = color.g;
+                    colors[i3 + 2] = color.b;
+                }
+                
+                starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                starGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                
+                const starMaterial = new THREE.PointsMaterial({
+                    size: 1.5,
+                    sizeAttenuation: true,
+                    vertexColors: true,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const stars = new THREE.Points(starGeometry, starMaterial);
+                scene.add(stars);
+                
+                // Add a central planet (Mars)
+                const planetGeometry = new THREE.SphereGeometry(50, 64, 64);
+                const planetTexture = new THREE.MeshBasicMaterial({
+                    color: 0xfc3d21, // NASA orange
+                    transparent: true,
+                    opacity: 0.7
+                });
+                
+                const planet = new THREE.Mesh(planetGeometry, planetTexture);
+                scene.add(planet);
+                
+                // Add orbital ring
+                const ringGeometry = new THREE.RingGeometry(70, 75, 64);
+                const ringMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x00f5ff, // Cyber teal
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = Math.PI / 2;
+                scene.add(ring);
+                
+                // Add some asteroids
+                const asteroidGroup = new THREE.Group();
+                const asteroidCount = 50;
+                
+                for (let i = 0; i < asteroidCount; i++) {
+                    const asteroidGeometry = new THREE.SphereGeometry(Math.random() * 3 + 1, 8, 6);
+                    const asteroidMaterial = new THREE.MeshBasicMaterial({
+                        color: 0x888888,
+                        transparent: true,
+                        opacity: 0.7
+                    });
+                    
+                    const asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+                    
+                    // Position in a belt
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 100 + Math.random() * 50;
+                    
+                    asteroid.position.x = Math.cos(angle) * distance;
+                    asteroid.position.z = Math.sin(angle) * distance;
+                    asteroid.position.y = (Math.random() - 0.5) * 20;
+                    
+                    asteroidGroup.add(asteroid);
+                }
+                
+                scene.add(asteroidGroup);
+                
+                // Position camera
+                camera.position.z = 150;
+                
+                // Animation
+                function animate() {
+                    requestAnimationFrame(animate);
+                    
+                    // Rotate stars slowly
+                    stars.rotation.y += 0.0001;
+                    
+                    // Rotate planet
+                    planet.rotation.y += 0.002;
+                    
+                    // Rotate ring
+                    ring.rotation.z += 0.001;
+                    
+                    // Rotate asteroids
+                    asteroidGroup.rotation.y += 0.0005;
+                    
+                    renderer.render(scene, camera);
+                }
+                
+                animate();
+                
+                // Handle window resize
+                window.addEventListener('resize', function() {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+            
+            // Sidebar functionality
+            function initSidebar() {
+                const sidebar = document.getElementById('control-sidebar');
+                const toggleButton = document.getElementById('control-panel-toggle');
+                
+                // Toggle sidebar on button click
+                toggleButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('active');
+                    toggleButton.classList.toggle('active');
+                });
+                
+                // Close sidebar when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('active') && 
+                        !sidebar.contains(e.target) && 
+                        !toggleButton.contains(e.target)) {
+                        sidebar.classList.remove('active');
+                        toggleButton.classList.remove('active');
+                    }
+                });
+                
+                // Prevent sidebar close when clicking inside
+                sidebar.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+            
+            // Navigation functionality
+            function initNavigation() {
+                const navLinks = document.querySelectorAll('.nav-link');
+                
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        // Remove active class from all links
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        
+                        // Add active class to clicked link
+                        this.classList.add('active');
+                        
+                        // Get the section to show
+                        const section = this.getAttribute('data-section');
+                        
+                        // In a real app, this would load the appropriate content
+                        console.log(`Navigating to: ${section}`);
+                        
+                        // Close sidebar on mobile after selection
+                        if (window.innerWidth <= 768) {
+                            document.getElementById('control-sidebar').classList.remove('active');
+                            document.getElementById('control-panel-toggle').classList.remove('active');
+                        }
+                    });
+                });
+            }
+            
+            // Interactive elements
+            function initInteractiveElements() {
+                // CTA button animation
+                const ctaButton = document.querySelector('.cta-button');
+                
+                ctaButton.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-3px)';
+                    this.style.boxShadow = '0 10px 25px rgba(252, 61, 33, 0.7)';
+                });
+                
+                ctaButton.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 0 20px rgba(252, 61, 33, 0.5)';
+                });
+                
+                // Feature card interactions
+                const featureCards = document.querySelectorAll('.feature-card');
+                
+                featureCards.forEach(card => {
+                    card.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateY(-10px)';
+                    });
+                    
+                    card.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateY(0)';
+                    });
+                });
+                
+                // Settings and about items
+                const interactiveItems = document.querySelectorAll('.settings-option, .about-item');
+                
+                interactiveItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        // In a real app, this would trigger the appropriate action
+                        const text = this.querySelector('span:last-child').textContent;
+                        console.log(`Selected: ${text}`);
+                    });
+                });
+            }
+            
+            // Load mission intel data
+            function loadMissionIntel() {
+                const missionCardsContainer = document.getElementById('mission-cards-container');
+                
+                // Sample mission data (in a real app, this would come from NASA/ESA APIs)
+                const missionData = [
+                    {
+                        id: 1,
+                        image: 'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1471&q=80',
+                        headline: 'James Webb Telescope Discovers Water on Exoplanet',
+                        description: 'The James Webb Space Telescope has detected water vapor in the atmosphere of a distant exoplanet, marking a significant step in the search for habitable worlds.',
+                        date: '2023-10-15',
+                        likes: 1247,
+                        comments: 89,
+                        shares: 312
+                    },
+                    {
+                        id: 2,
+                        image: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1510&q=80',
+                        headline: 'Artemis II Mission Prepares for Lunar Flyby',
+                        description: 'NASA astronauts are training for the Artemis II mission, which will carry humans around the Moon for the first time in over 50 years.',
+                        date: '2023-10-12',
+                        likes: 2156,
+                        comments: 156,
+                        shares: 478
+                    },
+                    {
+                        id: 3,
+                        image: 'https://images.unsplash.com/photo-1502136969935-8d8eef54d77b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1469&q=80',
+                        headline: 'Mars Rover Discovers Evidence of Ancient River Delta',
+                        description: 'Perseverance rover has found compelling evidence of an ancient river delta in Jezero Crater, suggesting Mars once had flowing water.',
+                        date: '2023-10-08',
+                        likes: 1892,
+                        comments: 203,
+                        shares: 391
+                    },
+                    {
+                        id: 4,
+                        image: 'https://images.unsplash.com/photo-1543722530-d2c3201371e7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1474&q=80',
+                        headline: 'ESA Announces New Earth Observation Mission',
+                        description: 'The European Space Agency has unveiled plans for a new satellite constellation to monitor climate change with unprecedented accuracy.',
+                        date: '2023-10-05',
+                        likes: 987,
+                        comments: 67,
+                        shares: 245
+                    },
+                    {
+                        id: 5,
+                        image: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1494&q=80',
+                        headline: 'Space Weather Alert: Solar Flare Expected to Impact Earth',
+                        description: 'NOAA has issued a space weather alert for a significant solar flare that may cause auroras and potential satellite disruptions.',
+                        date: '2023-10-03',
+                        likes: 1345,
+                        comments: 178,
+                        shares: 512
+                    },
+                    {
+                        id: 6,
+                        image: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1450&q=80',
+                        headline: 'International Space Station Celebrates 25 Years in Orbit',
+                        description: 'The ISS marks a quarter century of continuous human presence in space, with over 3,000 research experiments conducted aboard.',
+                        date: '2023-09-28',
+                        likes: 2987,
+                        comments: 312,
+                        shares: 689
+                    }
+                ];
+                
+                // Generate mission cards
+                missionData.forEach(mission => {
+                    const missionCard = document.createElement('div');
+                    missionCard.className = 'mission-card';
+                    
+                    missionCard.innerHTML = `
+                        <img src="${mission.image}" alt="${mission.headline}" class="mission-image">
+                        <div class="mission-content">
+                            <h4 class="mission-headline">${mission.headline}</h4>
+                            <p class="mission-description">${mission.description}</p>
+                            <div class="mission-meta">
+                                <div class="mission-date">
+                                    <span>📅</span>
+                                    <span>${mission.date}</span>
+                                </div>
+                            </div>
+                            <div class="mission-engagement">
+                                <div class="engagement-actions">
+                                    <button class="engagement-btn" data-id="${mission.id}" data-type="like">
+                                        <span>👍</span>
+                                        <span>Like</span>
+                                    </button>
+                                    <button class="engagement-btn" data-id="${mission.id}" data-type="comment">
+                                        <span>💬</span>
+                                        <span>Comment</span>
+                                    </button>
+                                    <button class="engagement-btn" data-id="${mission.id}" data-type="share">
+                                        <span>🔄</span>
+                                        <span>Share</span>
+                                    </button>
+                                </div>
+                                <div class="engagement-count">
+                                    <span class="like-count">${mission.likes}</span> · 
+                                    <span class="comment-count">${mission.comments}</span> · 
+                                    <span class="share-count">${mission.shares}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    missionCardsContainer.appendChild(missionCard);
+                });
+                
+                // Add engagement functionality
+                const engagementButtons = document.querySelectorAll('.engagement-btn');
+                
+                engagementButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const missionId = this.getAttribute('data-id');
+                        const actionType = this.getAttribute('data-type');
+                        
+                        // In a real app, this would send a request to the backend
+                        console.log(`User performed ${actionType} on mission ${missionId}`);
+                        
+                        // Update UI (simulated)
+                        const countElement = this.closest('.mission-card').querySelector(`.${actionType}-count`);
+                        let currentCount = parseInt(countElement.textContent);
+                        countElement.textContent = currentCount + 1;
+                        
+                        // Visual feedback
+                        this.style.color = 'var(--cyber-teal)';
+                        setTimeout(() => {
+                            this.style.color = '';
+                        }, 1000);
+                    });
+                });
+                
+                // Update the "last updated" time
+                const updateTimeElement = document.getElementById('update-time');
+                const now = new Date();
+                updateTimeElement.textContent = now.toLocaleTimeString();
+            }
+            
+            // Start animations
+            function startAnimations() {
+                // Add floating animation to feature cards with delays
+                const featureCards = document.querySelectorAll('.feature-card');
+                
+                featureCards.forEach((card, index) => {
+                    card.style.animation = `float 6s ease-in-out ${index * 0.5}s infinite`;
+                });
+                
+                // Add glow animation to headings
+                const headings = document.querySelectorAll('h1, h2, h3');
+                
+                headings.forEach((heading, index) => {
+                    heading.style.animation = `glow 4s ease-in-out ${index * 0.3}s infinite`;
+                });
+            }
+            
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + M to toggle sidebar
+                if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+                    e.preventDefault();
+                    document.getElementById('control-sidebar').classList.toggle('active');
+                    document.getElementById('control-panel-toggle').classList.toggle('active');
+                }
+                
+                // Escape to close sidebar
+                if (e.key === 'Escape') {
+                    document.getElementById('control-sidebar').classList.remove('active');
+                    document.getElementById('control-panel-toggle').classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
